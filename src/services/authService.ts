@@ -16,7 +16,6 @@ export class AuthService {
             `, 
             [tenantId]
         );
-
         if (tenantCheck.rows.length === 0) throw new Error('User already exists in this tenant.');
 
         // Hash password
@@ -28,7 +27,6 @@ export class AuthService {
             `,
             [email, hashedPassword, firstName || null, lastName || null, role || 'buyer', tenantId]
         );
-
         return result.rows[0];
     };
 
@@ -45,7 +43,6 @@ export class AuthService {
         );
 
         if (result.rows.length === 0) throw new Error('Invalid credentials.');
-
         const user = result.rows[0];
 
         // Verify password
@@ -71,8 +68,14 @@ export class AuthService {
         const sessionManager = await SessionManager.getInstance();
         await sessionManager.createSession(user.id, token);
 
+        // Not sure about this return statement: TODO - test it tomorrow!
+        return {
+            token,
+            user
+        };
     };
-    
+
+    // TODO: complete the functions below:    
     static async logout(userId: string): Promise<void> {};
 
     static async logoutAll(userId: string): Promise<void> {};

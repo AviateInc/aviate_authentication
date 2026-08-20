@@ -130,5 +130,4 @@ export class TenantService {
             client.release();
         }
     }
-
 }

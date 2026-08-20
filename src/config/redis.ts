@@ -68,23 +68,16 @@ export class SessionManager {
         if (!this.client) throw new Error('Redis client not initialized.');
         const token = await this.client.get(`session:${ userId }`);
 
-        if (token) {
-            await this.client.del(`token:${ token }`);
-        }
-
+        if (token) await this.client.del(`token:${ token }`);
         await this.client.del(`session:${userId}`);
     }
     
     async invalidateAllSessions(userId: string): Promise<void> {
-        if (!this.client) throw new Error('Redis client not initialized.');
-        
+        if (!this.client) throw new Error('Redis client not initialized.');     
         // Pattern: session:* for user
         const keys = await this.client.keys(`session:${ userId }:*`);
         
-        if (keys.length > 0) {
-            await this.client.del(keys);
-        }
-
+        if (keys.length > 0) await this.client.del(keys);
         // We also handle the main session key
         await this.invalidateSession(userId);
     }
