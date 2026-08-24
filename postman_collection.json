@@ -1,0 +1,372 @@
+{
+    "info": {
+        "name": "Aviate Auth API",
+        "description": "Multi-tenant authentication backend",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:5000/api"
+        },
+        {
+            "key": "tenantId",
+            "value": ""
+        },
+        {
+            "key": "authToken",
+            "value": ""
+        }
+    ],
+    "items": [
+        {
+            "name": "1. Health Check",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/../health",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["..", "health"] 
+                }
+            }
+        },
+        {
+            "name": "2. Tenant Managememt",
+            "item": [
+                {
+                    "name": "Create Tenant",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n \"name\": \"Department of Defense\", \n \"subdomain\": \"dod\", \n \"agencyCode\": \"DOD-001\" \n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/tenants",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["tenants"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Tenant by Subdomain",
+                    "request": {
+                        "method": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/tenants/subdomain/dod",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["tenants", "subdomain", "dod"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Validate Subdomain",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/tenants/validate?sudomain=dod",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["tenants", "validate"],
+                            "query": [
+                                {
+                                    "key": "subdomain",
+                                    "value": "dod"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "3. Authentication",
+            "item": [
+                {
+                    "name": "Register User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Registration successful.', function() {",
+                                    "pm.response.to.have.status(201);",
+                                    "pm.response.to.have.jsonBody('user.id);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "url": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n \"email\": \"john@dod.gov\", \n \"password\": \"SecurePass123!\", \n \"firstName\": \"John\", \n \"lastName\": \"Doe\", \n \"role\": \"admin\",\n \"tenantId\": \"{{tenantId}}\"\n}",
+                            "url": {
+                                "raw": "{{baseUrl}}/auth/register",
+                                "host": ["{{baseUrl}}"],
+                                "path": ["auth", "register"]
+                            }
+                        },
+                        "response": []
+                    }
+                },
+                {
+                    "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Login successful.', function() {",
+                                    "pm.response.to.have.status(200);",
+                                    "pm.response.to.have.jsonBody('token');",
+                                    "});",
+                                    "",
+                                    "const response = pm.response.json();",
+                                    "if (response.token) {",
+                                    "pm.environment.set('authToken', response.token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n \"email\": \"john@dod.gov\", \n \"password\": \"SecurePass123!\", \n \"tenantId\": \"{{tenantId}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["auth", "login"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login - Invalid Credentials",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n \"email\": \"wrong@dod.gov\",\n \"password\": \"WrongPass\",\n \"tenantId\": \"{{tenantId}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["auth", "login"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Current User",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/me",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["auth", "me"]
+                        }
+                    },
+                    "response": []
+                }, 
+                {
+                    "name": "Change Password",
+                    "request": {
+                        "method": "POST", 
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value":"Bearer {{authToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n \"oldPassword\": \"SecurePass123!\",\n \"newPassword\": \"NewSecurePass123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/change-password",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["auth", "change-password"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/logout",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["auth", "logout"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "4. Protected Toutes",
+            "item": [
+                {
+                    "name": "Access  Protected Route",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-tenant-subdomain",
+                                "value": "dod"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/protected",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["protected"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "5. Session Management",
+            "item": [
+                {
+                    "name": "Refresh Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value":"Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/refresh",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["auth", "refresh"]
+                        }
+                    }, 
+                    "response": []
+                },
+                {
+                    "name": "Logout All Sessions",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value":"Bearer {{authToken}}"
+                            }
+                        ], 
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/logout-all",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["auth", "logout-all"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "6. Password Reset Flow",
+            "item": [
+                {
+                    "name": "Forgot Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n \"email\" \"john@dod.gov\",\n \"tenantId\": \"{{tenantId}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/forgot-password",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["auth", "forgot-password"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reset Passord",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n \"resetToken\": \"YOUR_RESET_TOKEN_FROM_EMAIL\",\n \"newPassword\": \"newSecurePassword123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/reset-password",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["auth", "reset-password"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
+}

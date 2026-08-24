@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: PersistentVOlumeClaim
+metadata: 
+  name: postgres_pvc
+  spec: 
+    accessModes: 
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 10Gi
+---
+apiVerion: apps/v1
+kind: StatefulSet
+metadata: 
+  name: postgres
+spec: 
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: POSTGRES_USER
+        valueFrom:
+          secretKeyRef:
+            name: aviate-secrets
+            key: POSTGRES_USER
+      - name: POSTGRES_PASSWORD
+        valueFrom: 
+          secretKeyRef:
+            name: aviate-secrets
+            key: POSTGRES_PASSWORD
+      - name: POSTGRES_DB
+        valueFrom: 
+          secretKeyRef: 
+            name: aviate-secrets
+            key: POSTGRES_DB
+      volumeMounts:
+      - name: postgres-storage
+        mountPath: /var/lib/postgressql/data
+      resources: 
+        requests:
+          memory: "512Mi"
+          cpu: "500m"
+        limits:
+          memory: "10i"
+          cpu: "1000m"
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec: 
+      accessModes: ["ReadWriteOnce"]
+      resources: 
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: storage
+spec:
+  selector:
+    app: postgres
+  posts:
+  - port: 5432
+    targetPort: 5432
+  clusterIp: None
+  

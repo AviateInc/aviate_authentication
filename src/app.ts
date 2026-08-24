@@ -11,8 +11,6 @@ import { tenantMiddleware } from "./middleware/tenant";
 
 import authRoutes from "./routes/authRoutes";
 import tenantRoutes from "./routes/tenantRoutes";
-import { timeStamp } from "node:console";
-import { RedisClient } from "redis";
 
 dotenv.config();
 
@@ -100,13 +98,13 @@ async function startServer() {
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-    console.log('SIGINT received, shutting down...');
-    process.exit(1);
+    console.log('SIGTERM received, shutting down...');
+    process.exit(0);
 });
 
-process.on('SIGTERM', async () => {
+process.on('SIGINT', async () => {
     console.log('SIGINT received, shutting down...');
-    process.exit(1);
+    process.exit(0);
 });
 
 startServer();
