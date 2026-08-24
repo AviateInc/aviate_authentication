@@ -58,7 +58,71 @@ async function initDatabase() {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )`
         );
+        await dbClient.query(`
+            CREATE TABLE IF NOT EXISTS public.users (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                tenant_id UUID NOT NULL,
+                email VARCHAR(255) NOT NULL, 
+                password_hash VARCHAR(255) NOT NULL,
+                first_name VARCHAR(50),
+                last_name VARCHAR(50),
+                role VARCHAR(50) DEFAULT 'buyer',
+                is_active BOOLEAN DEFAULT true,
+                last_login TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(tenant_id, email),
+                FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE
+            )`
+        );
+        await dbClient.query(`
+            CREATE TABLE IF NOT EXISTS public.sessions (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                user_id UUID NOT NULL,
+                token VARCHAR(500) NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
+            )`
+        );
+        await dbClient.query(`
+            CREATE INDEX IF NOT EXISTS idx_tenants_subdomain 
+            ON public.tenants(subdomain)`
+        );
+        await dbClient.query(`
+            CREATE INDEX IF NOT EXISTS idx_tenants_active
+            ON public.tenants(is_active)`
+        );
+        await dbClient.query(`
+            CREATE INDEX IF NOT EXISTS idx_users_tenant
+            ON public.users(tenant_id)`
+        );
+        await dbClient.query(`
+            CREATE INDEX IF NOT EXISTS idx_users_email
+            ON public.users(email)`
+        );
+        await dbClient.query(`
+            CREATE INDEX IF NOT EXISTS idx_users_active
+            ON public.users(is_active)`
+        );
+        await dbClient.query(`
+            CREATE INDEX IF NOT EXISTS idx_session_token
+            ON public.session(token)`
+        );
+        await dbClient.query(`
+            CREATE INDEX IF NOT EXISTS idx_session_expires
+            ON public.session(expires_at)`
+        );
+
+        console.log('Tables created successfully.')
     } catch (error) {
-        
+        console.error('Table creation failed.', error);
+    } finally {
+        dbClient.release();
+        await pool.end();
     }
+
+    console.log('Database initialization complete!')
 }
+
+initDatabase();
