@@ -3,14 +3,14 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const dbName = process.env.POSTGRES_DB || 'aviate-db';
+const dbName = process.env.POSTGRES_DB || 'aviate_db';
 
 async function initDatabase() {
     const adminPool = new Pool({
         host: process.env.POSTGRES_HOST || 'localhost',
         port: parseInt(process.env.POSTGRES_PORT || '5432'),
         user: process.env.POSTGRES_USER || 'admin',
-        password: process.env.POSTGRES_PASSWORD || 'securepassword',
+        password: process.env.POSTGRES_PASSWORD || 'superS3cretAv1ateDbPassword',
         database: 'postgres',
     });
 
@@ -39,7 +39,7 @@ async function initDatabase() {
         host: process.env.POSTGRES_HOST || 'localhost',
         port: parseInt(process.env.POSTGRES_PORT || '5432'),
         user: process.env.POSTGRES_USER || 'admin',
-        password: process.env.POSTGRES_PASSWORD || 'securepassword',
+        password: process.env.POSTGRES_PASSWORD || 'superS3cretAv1ateDbPassword',
         database: dbName,
     });
 
